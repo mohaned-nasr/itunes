@@ -1,6 +1,3 @@
-
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:itunes/models/album_class.dart';
 import 'package:itunes/services/api_service.dart';
@@ -95,7 +92,6 @@ class _MyHomePageState extends State<MyHomePage> {
             itemCount: snapshot.data!.length,
             itemBuilder: (context, index) {
               final album = snapshot.data![index];
-              log(album.imageURl,name: "mohaned");
               return ListTile(
                 leading: Image.network(album.imageURl),
                 title: Text(album.name),

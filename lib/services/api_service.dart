@@ -1,4 +1,4 @@
-import 'dart:developer';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:itunes/models/album_class.dart';
@@ -12,8 +12,8 @@ Future<List<Album>> fetchAlbums() async {
     );
 
     if (response.statusCode == 200) {
-      final entries = response.data['feed']['entry'] as List;
-      log(entries[0].toString(),name: '/////////////////////////////moahend');
+      final data = response.data is String ? jsonDecode(response.data) :response.data;
+      final entries = data['feed']['entry'] as List;
       return entries.map((e) => Album.fromJson(e as Map<String, dynamic>))
           .toList();
     } else {
