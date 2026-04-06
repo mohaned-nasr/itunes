@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:itunes/models/album_class.dart';
 
-Future<List<Album>> fetchAlbums() async {
+Future<List<Album>> fetchAlbums(int limit) async {
   final dio = Dio();
-  dio.interceptors.addAll([LogInterceptor(requestBody: true,requestHeader: true,responseBody: true,responseHeader: true)]);
+  //dio.interceptors.addAll([LogInterceptor(requestBody: true,requestHeader: true,responseBody: true,responseHeader: true)]);
   try {
     final response = await dio.get(
-      'https://itunes.apple.com/us/rss/topalbums/limit=100/json',
+      'https://itunes.apple.com/us/rss/topalbums/limit=$limit/json',
     );
 
     if (response.statusCode == 200) {
@@ -22,4 +22,6 @@ Future<List<Album>> fetchAlbums() async {
   }catch(e){
     throw Exception('failed to fetching in right types');
   }
+
+
 }

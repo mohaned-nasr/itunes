@@ -6,6 +6,7 @@ class Album {
   final String title;
   final String artist;
   final String category;
+  final String ID;
 
 
   const Album({
@@ -16,6 +17,7 @@ class Album {
     required this.itemCount,
     required this.price,
     required this.title,
+    required this.ID
     });
 
   factory Album.fromJson(Map<String, dynamic> json) {
@@ -27,7 +29,8 @@ class Album {
         category: json['category']['attributes']['term'],
         itemCount: json['im:itemCount']['label'],
         price: json['im:price']['label'],
-        title: json['title']['label']
+        title: json['title']['label'],
+        ID: json['id']['attributes']['im:id']
     );
 
   }
