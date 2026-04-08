@@ -183,13 +183,14 @@ class AlbumDetailsScreen extends StatelessWidget {
                           'Open in iTunes / Apple Music',
                           style: TextStyle(fontSize: 15),
                         ),
-                        onPressed: () async {
-                          final uri = Uri.parse(album.Link);
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri,
-                                mode: LaunchMode.externalApplication);
+                          onPressed: () async {
+                            final uri = Uri.parse(album.Link);
+                            try {
+                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            } catch (e) {
+                              debugPrint('Could not launch $uri: $e');
+                            }
                           }
-                        },
                       ),
                     ),
 

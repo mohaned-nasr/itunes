@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:itunes/models/album_class.dart';
 import 'package:itunes/providers/album_provider.dart';
 import 'package:itunes/screens/home_screen.dart';
-import 'package:itunes/services/api_service.dart';
 import 'package:provider/provider.dart';
 
 
