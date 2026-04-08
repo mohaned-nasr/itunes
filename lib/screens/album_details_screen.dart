@@ -4,7 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/album_class.dart';
 import '../providers/album_provider.dart';
-import '../widgets/chip.dart';
+import '../widgets/StatChip.dart';
 import '../widgets/InfoRow.dart';
 
 class AlbumDetailsScreen extends StatelessWidget {
