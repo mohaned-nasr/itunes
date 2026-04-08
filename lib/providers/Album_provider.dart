@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:itunes/models/album_class.dart';
 import 'package:itunes/services/api_service.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+import 'package:itunes/services/database_service.dart';
 
 
 
 class AlbumProvider extends ChangeNotifier {
+  final DatabaseService _dbService;
+
+  AlbumProvider({DatabaseService? dbService})
+      : _dbService = dbService ?? DatabaseService();
   List<Album> _visibleALbums = [];
   List<Album> _favouriteAlbums =[];
-  Set<String> _favourites = {}; //needed to refactor
+  Set<String> _favourites = {};
   bool _isloading = false;
   bool _isFetchingMore = false;
+  String? _errorMessage;
 
   int _currentLimit = 20;
   final int _maxLimit = 100 ;
-  Database? _db;
 
   // Getters
   List<Album> get visibleAlbums => _visibleALbums;
@@ -23,55 +26,36 @@ class AlbumProvider extends ChangeNotifier {
   bool get isFetchingMore => _isFetchingMore;
   bool get hasMore => _currentLimit < _maxLimit;
   List<Album> get favouriteAlbums => _favouriteAlbums;
+  String? get errorMessage => _errorMessage;
 
-  Future<Database> _getDb() async{
-    if (_db !=null) return _db!;
-    final dbPath =await getDatabasesPath();
-    _db = await openDatabase(
-      join(dbPath, 'favourites.db'),
-      version: 1,
-      onCreate: (db,version){
-            return db.execute('''
-            CREATE TABLE favourites (
-            album_id TEXT PRIMARY KEY,
-            name TEXT,
-            image_url TEXT,
-            artist TEXT,
-            category TEXT,
-            item_count TEXT,
-            price TEXT,
-            title TEXT,
-            release_date TEXT,
-            link TEXT
-            )
-            ''');
-      }
-    );
-    return _db!;
-
-  }
 
   Future<void> initializeData() async {
     _isloading = true;
+    _errorMessage = null;
     notifyListeners();
 
-    final db = await _getDb();
-    final rows = await db.query('favourites');
-    _favouriteAlbums = rows.map((r) => Album.fromMap(r)).toList();
-    _favourites = _favouriteAlbums.map((a) => a.ID).toSet();
+    try {
+      final rows = await _dbService.getAllFavourites();
+      _favouriteAlbums = rows.map((r) => Album.fromMap(r)).toList();
+      _favourites = _favouriteAlbums.map((a) => a.ID).toSet();
+    } catch (e) {
+      debugPrint("Failed to load favourites from DB: $e");
+    }
 
     try {
       _currentLimit = 20;
-      _visibleALbums =await fetchAlbums(_currentLimit);
-    }catch(e){
+      _visibleALbums = await fetchAlbums(_currentLimit);
+    } catch (e) {
+      _errorMessage = 'Could not load albums. Check your connection.';
       debugPrint("Fetch failed: $e");
-    }finally{
-      _isloading =false;
+    } finally {
+      _isloading = false;
       notifyListeners();
     }
   }
 
-  void loadmore() async{
+
+  Future<void> loadmore() async{
     if (!hasMore || isFetchingMore) {
       return;
     }
@@ -94,20 +78,38 @@ class AlbumProvider extends ChangeNotifier {
     }
   }
 
-  // 4. Toggle logic
-  void toggleFavorite(Album album) async {
-    final db =await _getDb();
-    if(_favourites.contains(album.ID)){
-      _favourites.remove(album.ID);
-      _favouriteAlbums.removeWhere((a) => a.ID ==album.ID);
-      await db.delete('favourites', where: 'album_id = ?', whereArgs: [album.ID]);
-    }else{
+Future<void> toggleFavorite(Album album) async {
+  final wasAlreadyFav = _favourites.contains(album.ID);
+
+  if (wasAlreadyFav) {
+    _favourites.remove(album.ID);
+    _favouriteAlbums.removeWhere((a) => a.ID == album.ID);
+  } else {
+    _favourites.add(album.ID);
+    _favouriteAlbums.add(album);
+  }
+  notifyListeners();
+
+
+  try {
+    if (wasAlreadyFav) {
+      await _dbService.deleteFavourite(album.ID);
+    } else {
+      await _dbService.insertFavourite(album);
+    }
+  } catch (e) {
+    debugPrint("DB toggle failed, rolling back: $e");
+    // Rollback the optimistic update
+    if (wasAlreadyFav) {
       _favourites.add(album.ID);
       _favouriteAlbums.add(album);
-      await db.insert('favourites', album.toMap(),conflictAlgorithm: ConflictAlgorithm.ignore);
+    } else {
+      _favourites.remove(album.ID);
+      _favouriteAlbums.removeWhere((a) => a.ID == album.ID);
     }
     notifyListeners();
   }
+}
   bool isFavorite(String id) => _favourites.contains(id);
 
 }

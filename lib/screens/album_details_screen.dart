@@ -7,6 +7,7 @@ import '../providers/album_provider.dart';
 import '../widgets/StatChip.dart';
 import '../widgets/InfoRow.dart';
 
+
 class AlbumDetailsScreen extends StatelessWidget {
   final Album album;
 
@@ -21,7 +22,6 @@ class AlbumDetailsScreen extends StatelessWidget {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // ── Collapsing hero app bar ──────────────────────────────────────
           SliverAppBar(
             expandedHeight: 340,
             pinned: true,
@@ -39,15 +39,6 @@ class AlbumDetailsScreen extends StatelessWidget {
                   SharePlus.instance.share(ShareParams(text: msg));
                 },
               ),
-              IconButton(
-                tooltip: isFav ? 'Remove from favourites' : 'Add to favourites',
-                icon: Icon(
-                  isFav ? Icons.favorite : Icons.favorite_border,
-                  color: isFav ? Colors.redAccent : Colors.white,
-                ),
-                onPressed: () =>
-                    context.read<AlbumProvider>().toggleFavorite(album),
-              ),
               const SizedBox(width: 4),
             ],
             flexibleSpace: FlexibleSpaceBar(
@@ -58,7 +49,6 @@ class AlbumDetailsScreen extends StatelessWidget {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Album art via Hero
                   Hero(
                     tag: 'album-image-${album.ID}',
                     child: Image.network(
@@ -71,7 +61,7 @@ class AlbumDetailsScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Gradient fade at the bottom so title is readable
+
                   const DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -82,7 +72,7 @@ class AlbumDetailsScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Album name + artist overlaid at bottom of the art
+
                   Positioned(
                     left: 16,
                     right: 16,
@@ -119,14 +109,14 @@ class AlbumDetailsScreen extends StatelessWidget {
             ),
           ),
 
-          // ── Body content ────────────────────────────────────────────────
+
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Stat chips row
+
                   Wrap(
                     spacing: 10,
                     runSpacing: 8,
@@ -153,7 +143,7 @@ class AlbumDetailsScreen extends StatelessWidget {
                   const Divider(),
                   const SizedBox(height: 8),
 
-                  // Info rows
+
                   InfoRow(label: 'Artist', value: album.artist),
                   if (album.releaseDate.isNotEmpty)
                     InfoRow(label: 'Released', value: album.releaseDate),
@@ -165,7 +155,7 @@ class AlbumDetailsScreen extends StatelessWidget {
                   const Divider(),
                   const SizedBox(height: 16),
 
-                  // Open on iTunes button
+
                   if (album.Link.isNotEmpty)
                     SizedBox(
                       width: double.infinity,

@@ -8,7 +8,6 @@ class FavoritesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // We use context.watch so the list updates instantly if we unlike something
     final favs = context.watch<AlbumProvider>().favouriteAlbums;
 
 
