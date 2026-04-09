@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:itunes/models/album_class.dart';
 import 'package:itunes/services/api_service.dart';
 import 'package:itunes/services/database_service.dart';
+import '../network/network_exception.dart';
+
 
 
 
@@ -45,6 +47,9 @@ class AlbumProvider extends ChangeNotifier {
     try {
       _currentLimit = 20;
       _visibleALbums = await fetchAlbums(_currentLimit);
+    } on NetworkException catch (e){
+      _errorMessage = e.message;
+      debugPrint("Network Error: ${e.message}");
     } catch (e) {
       _errorMessage = 'Could not load albums. Check your connection.';
       debugPrint("Fetch failed: $e");
@@ -69,7 +74,9 @@ class AlbumProvider extends ChangeNotifier {
 
     try {
       _visibleALbums =await fetchAlbums(_currentLimit);
-    }catch(e){
+    }on NetworkException catch (e) {
+      debugPrint("Load more network error: ${e.message}");
+    } catch(e){
       debugPrint("Load more failed: $e");
     }
     finally{
