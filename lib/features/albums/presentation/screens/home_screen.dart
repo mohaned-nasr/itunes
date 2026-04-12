@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/album_provider.dart';
+import 'package:itunes/features/albums/presentation/providers/Album_provider.dart';
 import '../widgets/album_tile.dart';
 import 'favourites_screen.dart';
 

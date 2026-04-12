@@ -1,20 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:itunes/models/album_class.dart';
-import 'package:itunes/services/api_service.dart';
-import 'package:itunes/services/database_service.dart';
-import '../network/network_exception.dart';
+import 'package:itunes/features/albums/domain/entities/album_entity.dart';
+import '../../../../Core/network/network_exception.dart';
+import '../../domain/use_cases/get_favourites.dart';
+import '../../domain/use_cases/get_top_albums.dart';
+import '../../domain/use_cases/toggle_favourite.dart';
 
 
 
 
 class AlbumProvider extends ChangeNotifier {
-  final DatabaseService _dbService;
+  final GetTopAlbums _getTopAlbums;
+  final GetFavourites _getFavourites;
+  final ToggleFavourite _toggleFavourite;
 
-  AlbumProvider({DatabaseService? dbService})
-      : _dbService = dbService ?? DatabaseService();
-  List<Album> _visibleALbums = [];
-  List<Album> _favouriteAlbums =[];
-  Set<String> _favourites = {};
+  AlbumProvider({
+    required GetTopAlbums getTopAlbums,
+    required GetFavourites getFavourites,
+    required ToggleFavourite toggleFavourite,
+
+}) : _getTopAlbums =getTopAlbums,
+        _getFavourites = getFavourites,
+        _toggleFavourite = toggleFavourite;
+
+  List<AlbumEntity> _visibleALbums = [];
+  List<AlbumEntity> _favouriteAlbums =[];
+  Set<String> _favouriteIds = {};
   bool _isloading = false;
   bool _isFetchingMore = false;
   String? _errorMessage;
@@ -23,11 +33,11 @@ class AlbumProvider extends ChangeNotifier {
   final int _maxLimit = 100 ;
 
   // Getters
-  List<Album> get visibleAlbums => _visibleALbums;
+  List<AlbumEntity> get visibleAlbums => _visibleALbums;
   bool get isLoading => _isloading;
   bool get isFetchingMore => _isFetchingMore;
   bool get hasMore => _currentLimit < _maxLimit;
-  List<Album> get favouriteAlbums => _favouriteAlbums;
+  List<AlbumEntity> get favouriteAlbums => _favouriteAlbums;
   String? get errorMessage => _errorMessage;
 
 
@@ -37,16 +47,15 @@ class AlbumProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final rows = await _dbService.getAllFavourites();
-      _favouriteAlbums = rows.map((r) => Album.fromMap(r)).toList();
-      _favourites = _favouriteAlbums.map((a) => a.ID).toSet();
+      _favouriteAlbums = await _getFavourites();
+      _favouriteIds = _favouriteAlbums.map((a) => a.id).toSet();
     } catch (e) {
       debugPrint("Failed to load favourites from DB: $e");
     }
 
     try {
       _currentLimit = 20;
-      _visibleALbums = await fetchAlbums(_currentLimit);
+      _visibleALbums = await _getTopAlbums(_currentLimit);
     } on NetworkException catch (e){
       _errorMessage = e.message;
       debugPrint("Network Error: ${e.message}");
@@ -73,7 +82,7 @@ class AlbumProvider extends ChangeNotifier {
     }
 
     try {
-      _visibleALbums =await fetchAlbums(_currentLimit);
+      _visibleALbums =await _getTopAlbums(_currentLimit);
     }on NetworkException catch (e) {
       debugPrint("Load more network error: ${e.message}");
     } catch(e){
@@ -85,38 +94,36 @@ class AlbumProvider extends ChangeNotifier {
     }
   }
 
-Future<void> toggleFavorite(Album album) async {
-  final wasAlreadyFav = _favourites.contains(album.ID);
+Future<void> toggleFavorite(AlbumEntity album) async {
+  final wasAlreadyFav = _favouriteIds.contains(album.id);
 
   if (wasAlreadyFav) {
-    _favourites.remove(album.ID);
-    _favouriteAlbums.removeWhere((a) => a.ID == album.ID);
+    _favouriteIds.remove(album.id);
+    _favouriteAlbums.removeWhere((a) => a.id == album.id);
   } else {
-    _favourites.add(album.ID);
+    _favouriteIds.add(album.id);
     _favouriteAlbums.add(album);
   }
   notifyListeners();
 
 
   try {
-    if (wasAlreadyFav) {
-      await _dbService.deleteFavourite(album.ID);
-    } else {
-      await _dbService.insertFavourite(album);
-    }
+    await _toggleFavourite(
+      album: album,
+      currentlyFavourited: wasAlreadyFav,
+    );
   } catch (e) {
     debugPrint("DB toggle failed, rolling back: $e");
-    // Rollback the optimistic update
     if (wasAlreadyFav) {
-      _favourites.add(album.ID);
+      _favouriteIds.add(album.id);
       _favouriteAlbums.add(album);
     } else {
-      _favourites.remove(album.ID);
-      _favouriteAlbums.removeWhere((a) => a.ID == album.ID);
+      _favouriteIds.remove(album.id);
+      _favouriteAlbums.removeWhere((a) => a.id == album.id);
     }
     notifyListeners();
   }
 }
-  bool isFavorite(String id) => _favourites.contains(id);
+  bool isFavorite(String id) => _favouriteIds.contains(id);
 
 }

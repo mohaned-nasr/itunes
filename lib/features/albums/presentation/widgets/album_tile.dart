@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:itunes/features/albums/domain/entities/album_entity.dart';
 import 'package:provider/provider.dart';
-import 'package:itunes/models/album_class.dart';
-import 'package:itunes/providers/album_provider.dart';
-import 'package:itunes/screens/album_details_screen.dart';
+import 'package:itunes/features/albums/presentation/providers/Album_provider.dart';
+import 'package:itunes/features/albums/presentation/screens/album_details_screen.dart';
 import 'package:share_plus/share_plus.dart';
 
 class AlbumTile extends StatelessWidget {
-  final Album album;
+  final AlbumEntity album;
 
   const AlbumTile({super.key, required this.album});
 
   @override
   Widget build(BuildContext context) {
     final isFav = context.select<AlbumProvider, bool>(
-          (provider) => provider.isFavorite(album.ID),
+          (provider) => provider.isFavorite(album.id),
     );
 
     return Card(
@@ -31,11 +31,11 @@ class AlbumTile extends StatelessWidget {
         child: ListTile(
           contentPadding: const EdgeInsets.all(10),
           leading: Hero(
-            tag: 'album-image-${album.ID}',
+            tag: 'album-image-${album.id}',
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
-                album.imageURl,
+                album.imageUrl,
                 width: 60,
                 height: 60,
                 fit: BoxFit.cover,

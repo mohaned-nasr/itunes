@@ -1,8 +1,9 @@
-import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:itunes/models/album_class.dart';
+import 'package:sqflite/sqflite.dart';
+import '../../models/album_model.dart';
+import 'album_local_datasource.dart';
 
-class DatabaseService {
+class AlbumLocalDatasourceImpl implements AlbumLocalDatasource {
   Database? _db;
 
   Future<Database> _getDb() async {
@@ -31,12 +32,15 @@ class DatabaseService {
     return _db!;
   }
 
-  Future<List<Map<String, dynamic>>> getAllFavourites() async {
+  @override
+  Future<List<AlbumModel>> getAllFavourites() async {
     final db = await _getDb();
-    return db.query('favourites');
+    final rows = await db.query('favourites');
+    return rows.map((row) => AlbumModel.fromMap(row)).toList();
   }
 
-  Future<void> insertFavourite(Album album) async {
+  @override
+  Future<void> insertFavourite(AlbumModel album) async {
     final db = await _getDb();
     await db.insert(
       'favourites',
@@ -45,6 +49,7 @@ class DatabaseService {
     );
   }
 
+  @override
   Future<void> deleteFavourite(String albumId) async {
     final db = await _getDb();
     await db.delete(

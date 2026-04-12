@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../models/album_class.dart';
-import '../providers/album_provider.dart';
-import '../widgets/StatChip.dart';
-import '../widgets/InfoRow.dart';
+import '../../domain/entities/album_entity.dart';
+import 'package:itunes/features/albums/presentation/providers/Album_provider.dart';
+import '../../../../Core/widgets/StatChip.dart';
+import '../../../../Core/widgets/InfoRow.dart';
 
 
 class AlbumDetailsScreen extends StatelessWidget {
-  final Album album;
+  final AlbumEntity album;
 
   const AlbumDetailsScreen({super.key, required this.album});
 
   @override
   Widget build(BuildContext context) {
     final isFav = context.select<AlbumProvider, bool>(
-          (p) => p.isFavorite(album.ID),
+          (p) => p.isFavorite(album.id),
     );
 
     return Scaffold(
@@ -50,9 +50,9 @@ class AlbumDetailsScreen extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   Hero(
-                    tag: 'album-image-${album.ID}',
+                    tag: 'album-image-${album.id}',
                     child: Image.network(
-                      album.imageURl,
+                      album.imageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Container(
                         color: Colors.grey[900],
@@ -156,7 +156,7 @@ class AlbumDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 16),
 
 
-                  if (album.Link.isNotEmpty)
+                  if (album.link.isNotEmpty)
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton.icon(
@@ -174,7 +174,7 @@ class AlbumDetailsScreen extends StatelessWidget {
                           style: TextStyle(fontSize: 15),
                         ),
                           onPressed: () async {
-                            final uri = Uri.parse(album.Link);
+                            final uri = Uri.parse(album.link);
                             try {
                               await launchUrl(uri, mode: LaunchMode.externalApplication);
                             } catch (e) {

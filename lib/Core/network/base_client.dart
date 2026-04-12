@@ -41,7 +41,7 @@ class DioClient {
           final networkException = NetworkException.fromDioError(error);
           String errorMessage = networkException.message;
 
-          Fluttertoast.showToast(
+          Fluttertoast.showToast( // shared
             msg: errorMessage,
             toastLength: Toast.LENGTH_LONG,
             gravity: ToastGravity.BOTTOM,
